@@ -14,6 +14,7 @@ permissions:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -57,25 +58,50 @@ jobs:
         if: runner.os != 'Windows'
         run: strip target/${{ matrix.target }}/release/soblox-rpc
 
+      - name: Rename binary (Windows)
+        if: runner.os == 'Windows'
+        run: cp target/${{ matrix.target }}/release/soblox-rpc.exe target/${{ matrix.target }}/release/soblox-rpc-windows-amd64.exe
+
+      - name: Rename binary (Linux)
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: cp target/${{ matrix.target }}/release/soblox-rpc target/${{ matrix.target }}/release/soblox-rpc-linux-amd64
+
+      - name: Rename binary (macOS Intel)
+        if: matrix.target == 'x86_64-apple-darwin'
+        run: cp target/${{ matrix.target }}/release/soblox-rpc target/${{ matrix.target }}/release/soblox-rpc-macos-amd64
+
+      - name: Rename binary (macOS ARM)
+        if: matrix.target == 'aarch64-apple-darwin'
+        run: cp target/${{ matrix.target }}/release/soblox-rpc target/${{ matrix.target }}/release/soblox-rpc-macos-arm64
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: target/${{ matrix.target }}/release/soblox-rpc*
+          path: target/${{ matrix.target }}/release/soblox-rpc-*
 
   release:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
+      - name: Read changelog
+        id: changelog
+        run: |
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body: ${{ steps.changelog.outputs.body }}
           files: |
             artifacts/**/*
