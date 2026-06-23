@@ -16,10 +16,8 @@ struct Cli {
     universe_id: u64,
 
     /// Discord application client ID
-    /// Use "bloxstrap" for Bloxstrap's ID (1005469189907173486)
-    /// Or provide your own custom Discord application ID
-    #[arg(short, long, default_value = "bloxstrap")]
-    client_id: String,
+    #[arg(short, long)]
+    client_id: u64,
 }
 
 #[tokio::main]
@@ -34,12 +32,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let cli = Cli::parse();
-
-    // Resolve client ID
-    let client_id = match cli.client_id.as_str() {
-        "bloxstrap" => 1005469189907173486,
-        other => other.parse().expect("Invalid client ID"),
-    };
 
     info!("Fetching game info for universe {}...", cli.universe_id);
     let game_info = fetch_game_info(cli.universe_id).await?;
@@ -58,7 +50,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     info!("Connecting to Discord...");
-    let mut drpc = discord_presence::Client::new(client_id);
+    let mut drpc = discord_presence::Client::new(cli.client_id);
 
     let _ = drpc.on_ready(|_ctx| {
         info!("Discord RPC connected!");

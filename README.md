@@ -30,6 +30,18 @@ Playing ⚙️
 - Rust (install via [rustup](https://rustup.rs/))
 - Discord desktop client running (PTB supported)
 
+## Discord Application Setup
+
+Before using this tool, you need to create a Discord application:
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
+2. Click **"New Application"**
+3. Name it **`Roblox`** (exact name matters — this is what shows in your profile)
+4. Go to **Rich Presence** → **Art Assets**
+5. Click **"Add Image(s)"** and upload [`app_assets/roblox_logo.png`](app_assets/roblox_logo.png)
+6. Name the asset **`roblox_logo`** (must match exactly)
+7. Go to **General Information** and copy the **Application ID**
+
 ## Installation
 
 ### From Source
@@ -49,7 +61,7 @@ Download the latest release from [GitHub Releases](https://github.com/youruserna
 ## Usage
 
 ```bash
-soblox-rpc --universe-id <UNIVERSE_ID>
+soblox-rpc -u <UNIVERSE_ID> -c <CLIENT_ID>
 ```
 
 ### Finding the Universe ID
@@ -73,37 +85,19 @@ fetch(`https://apis.roblox.com/universes/v1/places/${window.location.pathname.sp
 
 ```bash
 # Brookhaven RP
-cargo run -- -u 4252370513
+soblox-rpc -u 4252370513 -c 123456789012345678
 
 # Block Tales
-cargo run -- -u 5678284602
-
-# Use custom Discord Application ID
-cargo run -- -u 4252370513 -c 123456789012345678
+soblox-rpc -u 5678284602 -c 123456789012345678
 ```
 
 ### CLI Options
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `-u, --universe-id` | Roblox universe ID (required) | — |
-| `-c, --client-id` | Discord application client ID | `bloxstrap` |
+| Flag | Description | Required |
+|------|-------------|----------|
+| `-u, --universe-id` | Roblox universe ID | yes |
+| `-c, --client-id` | Discord application client ID | yes |
 | `-h, --help` | Print help | — |
-
-### Discord Application ID
-
-By default, the app uses Bloxstrap's Discord Application ID (`1005469189907173486`). You can:
-
-- Use `bloxstrap` (default) — uses Bloxstrap's verified app
-- Provide your own Discord Application ID from the [Discord Developer Portal](https://discord.com/developers/applications)
-
-To create your own Discord app:
-1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
-2. Click "New Application"
-3. Name it **`Roblox`** (exact name matters)
-4. Go to **Rich Presence** → **Art Assets**
-5. Upload a Roblox logo image and name it `roblox_logo`
-6. Copy the Application ID from **General Information**
 
 ## Building
 
@@ -156,5 +150,4 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- [Bloxstrap](https://github.com/bloxstraplabs/bloxstrap) — for the Discord Application ID
 - [discord-presence](https://crates.io/crates/discord-presence) — Rust Discord RPC library
