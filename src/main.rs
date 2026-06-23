@@ -8,7 +8,7 @@ mod roblox;
 use roblox::api::{fetch_game_info, fetch_game_thumbnail};
 
 #[derive(Parser)]
-#[command(name = "roblox-rpc")]
+#[command(name = "soblox-rpc")]
 #[command(about = "Discord Rich Presence for Roblox (Sober-style)")]
 struct Cli {
     /// Roblox universe ID

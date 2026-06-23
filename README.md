@@ -1,4 +1,4 @@
-# roblox-rpc
+# soblox-rpc
 
 Discord Rich Presence for Roblox — Sober-style. Shows what Roblox game you're playing on your Discord profile.
 
@@ -35,21 +35,21 @@ Playing ⚙️
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/roblox-rpc.git
-cd roblox-rpc
+git clone https://github.com/yourusername/soblox-rpc.git
+cd soblox-rpc
 cargo build --release
 ```
 
-The binary will be at `target/release/roblox-rpc`.
+The binary will be at `target/release/soblox-rpc`.
 
 ### Pre-built Binaries
 
-Download the latest release from [GitHub Releases](https://github.com/yourusername/roblox-rpc/releases).
+Download the latest release from [GitHub Releases](https://github.com/yourusername/soblox-rpc/releases).
 
 ## Usage
 
 ```bash
-roblox-rpc --universe-id <UNIVERSE_ID>
+soblox-rpc --universe-id <UNIVERSE_ID>
 ```
 
 ### Finding the Universe ID
@@ -111,21 +111,21 @@ To create your own Discord app:
 
 ```bash
 cargo build
-# Binary: target/debug/roblox-rpc
+# Binary: target/debug/soblox-rpc
 ```
 
 ### Release Build
 
 ```bash
 cargo build --release
-# Binary: target/release/roblox-rpc
+# Binary: target/release/soblox-rpc
 ```
 
 ### Optimized Release
 
 ```bash
 cargo build --release
-strip target/release/roblox-rpc
+strip target/release/soblox-rpc
 ```
 
 ## Cross-Compilation

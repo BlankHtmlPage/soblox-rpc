@@ -18,16 +18,16 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact: roblox-rpc-linux-amd64
+            artifact: soblox-rpc-linux-amd64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: roblox-rpc-windows-amd64.exe
+            artifact: soblox-rpc-windows-amd64.exe
           - os: macos-latest
             target: x86_64-apple-darwin
-            artifact: roblox-rpc-macos-amd64
+            artifact: soblox-rpc-macos-amd64
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact: roblox-rpc-macos-arm64
+            artifact: soblox-rpc-macos-arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -55,13 +55,13 @@ jobs:
 
       - name: Strip binary (Linux/macOS)
         if: runner.os != 'Windows'
-        run: strip target/${{ matrix.target }}/release/roblox-rpc
+        run: strip target/${{ matrix.target }}/release/soblox-rpc
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: target/${{ matrix.target }}/release/roblox-rpc*
+          path: target/${{ matrix.target }}/release/soblox-rpc*
 
   release:
     needs: build

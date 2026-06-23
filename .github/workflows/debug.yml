@@ -49,5 +49,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: roblox-rpc-debug-${{ matrix.target }}
-          path: target/${{ matrix.target }}/debug/roblox-rpc*
+          name: soblox-rpc-debug-${{ matrix.target }}
+          path: target/${{ matrix.target }}/debug/soblox-rpc*
