@@ -1,8 +1,7 @@
 # soblox-rpc
 
-Discord Rich Presence for Roblox — Sober-style. Shows what Roblox game you're playing on your Discord profile.
+Discord Rich Presence for Roblox — Sober-style. Shows what Roblox game you're playing on your Discord profile. (Good way to troll your friends!)
 
-<!-- Replace with actual screenshot -->
 ![Roblox RPC Screenshot](docs/screenshot.png)
 
 ## Features
@@ -15,20 +14,10 @@ Discord Rich Presence for Roblox — Sober-style. Shows what Roblox game you're 
 - Roblox logo as small image
 - "View Game Page" button linking to the Roblox game page
 
-## Display Format
-
-```
-Playing ⚙️
-           Roblox
-           Playing 🏰 Block Tales [DEMO 5]
-           by Spaceman Moonbase
-           ⏱ 2:50:07
-```
-
 ## Prerequisites
 
 - Rust (install via [rustup](https://rustup.rs/))
-- Discord desktop client running (PTB supported)
+- Discord desktop client running (PTB, Canary supported)
 
 ## Discord Application Setup
 
@@ -47,16 +36,17 @@ Before using this tool, you need to create a Discord application:
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/soblox-rpc.git
+git clone https://github.com/BlankHtmlPage/soblox-rpc.git
 cd soblox-rpc
-cargo build --release
+cargo build # Debug build
+cargo build --release # Release build
 ```
 
-The binary will be at `target/release/soblox-rpc`.
+The binary will be at `target/debug/soblox-rpc` for the debug build and `target/release/soblox-rpc` for the release build.
 
 ### Pre-built Binaries
 
-Download the latest release from [GitHub Releases](https://github.com/yourusername/soblox-rpc/releases).
+Download the latest release from [GitHub Releases](https://github.com/BlankHtmlPage/soblox-rpc/releases).
 
 ## Usage
 
