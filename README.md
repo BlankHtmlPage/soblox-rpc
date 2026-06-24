@@ -1,5 +1,9 @@
 # soblox-rpc
 
+[![Debug Build](https://github.com/BlankHtmlPage/soblox-rpc/actions/workflows/debug.yml/badge.svg)](https://github.com/BlankHtmlPage/soblox-rpc/actions/workflows/debug.yml)
+[![Release](https://img.shields.io/github/v/release/BlankHtmlPage/soblox-rpc)](https://github.com/BlankHtmlPage/soblox-rpc/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Sober-style Discord Rich Presence for Roblox. Shows what Roblox game you're playing on your Discord profile. (Good way to troll your friends!)
 
 ![Roblox RPC Screenshot](docs/screenshot.png)
