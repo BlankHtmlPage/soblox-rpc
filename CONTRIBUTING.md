@@ -95,3 +95,9 @@ This project is fully or partially built using AI assistants. Contributors are w
 - **Review your changes** — AI-generated code must be reviewed before submitting
 - **Test your changes** — Run `cargo build` and manual testing before opening a PR
 - **Disclose AI usage** — In your PR description, note if code was AI-generated or AI-assisted
+- **Add co-author** — When AI generates significant code, add a `Co-authored-by` trailer to your commit:
+  ```
+  feat: add new feature
+
+  Co-authored-by: Claude <noreply@anthropic.com>
+  ```
