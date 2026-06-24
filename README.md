@@ -1,6 +1,6 @@
 # soblox-rpc
 
-Discord Rich Presence for Roblox — Sober-style. Shows what Roblox game you're playing on your Discord profile. (Good way to troll your friends!)
+Sober-style Discord Rich Presence for Roblox. Shows what Roblox game you're playing on your Discord profile. (Good way to troll your friends!)
 
 ![Roblox RPC Screenshot](docs/screenshot.png)
 
