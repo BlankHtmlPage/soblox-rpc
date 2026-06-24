@@ -1,4 +1,5 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use clap::Parser;
 use tracing::info;
@@ -52,19 +53,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Connecting to Discord...");
     let mut drpc = discord_presence::Client::new(cli.client_id);
 
-    let _ = drpc.on_ready(|_ctx| {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    let tx = Arc::new(Mutex::new(Some(tx)));
+    let _ready_handle = drpc.on_ready(move |_ctx| {
         info!("Discord RPC connected!");
+        if let Some(tx) = tx.lock().unwrap().take() {
+            let _ = tx.send(());
+        }
     });
+    _ready_handle.persist();
 
     drpc.start();
 
-    // Wait for connection
-    tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+    tokio::time::timeout(Duration::from_secs(5), rx)
+        .await
+        .map_err(|_| -> Box<dyn std::error::Error> { "Discord connection timed out".into() })??;
 
-    // Build activity
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)?
-        .as_millis() as u64;
+        .as_secs();
 
     let game_page_url = format!("https://www.roblox.com/games/{}", game_info.place_id);
     let activity_state = format!("Playing {}", game_info.name);
@@ -85,15 +92,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             })
             .append_buttons(|b| b.label("View Game Page").url(&game_page_url))
     })
-    .expect("Failed to set activity");
+    .map_err(|e| format!("Failed to set activity: {e}"))?;
 
     info!("Rich Presence set! Displaying: Playing {}", game_info.name);
     info!("Press Ctrl+C to exit.");
 
-    // Keep alive
     tokio::signal::ctrl_c().await?;
 
-    // Clear activity on exit
     drpc.clear_activity().ok();
 
     info!("Done.");

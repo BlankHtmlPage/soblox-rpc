@@ -13,14 +13,28 @@
 Thumbs.db
 
 # Environment
-.env
-.env.local
+.env*
 
 # Build artifacts
 *.exe
 *.dll
 *.so
 *.dylib
+
+# Credentials
+*.pem
+*.key
+*.cert
+*.p12
+credentials*
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+*.bak
+*.orig
 
 # Debug
 *.pdb
