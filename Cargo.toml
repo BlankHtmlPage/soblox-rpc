@@ -1,6 +1,6 @@
 [package]
 name = "soblox-rpc"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 description = "Sober-style Discord Rich Presence for Roblox"
 license = "MIT"
