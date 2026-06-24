@@ -2,6 +2,12 @@
 name = "soblox-rpc"
 version = "0.1.0"
 edition = "2021"
+description = "Sober-style Discord Rich Presence for Roblox"
+license = "MIT"
+authors = ["BlankHtmlPage <flurion@tuta.io>"]
+repository = "https://github.com/BlankHtmlPage/soblox-rpc"
+keywords = ["discord", "rich-presence", "roblox"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "time", "signal"] }
@@ -13,3 +19,10 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 discord-presence = "3.2"
 thiserror = "2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
