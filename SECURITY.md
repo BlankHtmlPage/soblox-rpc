@@ -39,3 +39,7 @@ No authentication data, tokens, or user credentials are handled.
 Once a fix is released, we will:
 - Credit the reporter (unless they prefer anonymity)
 - Publish a security advisory if the vulnerability is severe
+
+## AI Usage Disclosure
+
+This project is fully or partially built using AI assistants. All AI-generated code is reviewed by a human maintainer before merging. Security-critical changes receive additional scrutiny. If you find an issue in AI-generated code, report it the same way as any other vulnerability.

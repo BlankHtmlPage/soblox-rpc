@@ -87,3 +87,11 @@ Yanked versions:
 - Cannot be installed by new users (`cargo install`)
 - Still work for existing `Cargo.lock` entries
 - Are documented in CHANGELOG with the reason
+
+## AI Usage
+
+This project is fully or partially built using AI assistants. Contributors are welcome to use AI tools (Copilot, ChatGPT, Claude, etc.) when working on this project. However:
+
+- **Review your changes** — AI-generated code must be reviewed before submitting
+- **Test your changes** — Run `cargo build` and manual testing before opening a PR
+- **Disclose AI usage** — In your PR description, note if code was AI-generated or AI-assisted
