@@ -44,4 +44,3 @@ src/
 - No tests exist yet — `cargo test` will pass vacuously
 - Thumbnail fetch can fail gracefully (fallback to empty string)
 - The `universe_id` field in `GameInfo` is unused but kept for API completeness
-- Release workflow strips binaries for Linux/macOS

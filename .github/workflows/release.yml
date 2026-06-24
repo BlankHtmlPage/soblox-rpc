@@ -54,10 +54,6 @@ jobs:
       - name: Build (release)
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Strip binary (Linux/macOS)
-        if: runner.os != 'Windows'
-        run: strip target/${{ matrix.target }}/release/soblox-rpc
-
       - name: Rename binary (Windows)
         if: runner.os == 'Windows'
         run: cp target/${{ matrix.target }}/release/soblox-rpc.exe target/${{ matrix.target }}/release/soblox-rpc-windows-amd64.exe

@@ -109,13 +109,6 @@ cargo build --release
 # Binary: target/release/soblox-rpc
 ```
 
-### Optimized Release
-
-```bash
-cargo build --release
-strip target/release/soblox-rpc
-```
-
 ## Cross-Compilation
 
 ```bash
