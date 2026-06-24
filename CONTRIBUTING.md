@@ -61,3 +61,29 @@ Maintainers only:
 3. Tag: `git tag -a v1.2.0 -m "v1.2.0"`
 4. Push: `git push origin main --tags`
 5. GitHub Actions builds binaries and creates the release
+
+## Versioning
+
+We follow [Semantic Versioning](https://semver.org/):
+
+- **Major (X.0.0)** — breaking changes (CLI args, config format, behavior)
+- **Minor (x.Y.0)** — new features, backwards compatible
+- **Patch (x.y.Z)** — bug fixes, backwards compatible
+
+### Deprecation
+
+A version is deprecated when a new major version is released:
+- Deprecated versions receive no bug fixes
+- Deprecation is noted in CHANGELOG and README
+- Users are encouraged to upgrade
+
+### Yanking
+
+A version is yanked from crates.io only when:
+- A security vulnerability is discovered
+- A critical bug affects data integrity or system safety
+
+Yanked versions:
+- Cannot be installed by new users (`cargo install`)
+- Still work for existing `Cargo.lock` entries
+- Are documented in CHANGELOG with the reason
