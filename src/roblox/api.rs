@@ -1,16 +1,23 @@
 use std::time::Duration;
 
+use once_cell::sync::Lazy;
 use serde::Deserialize;
 
 const MAX_RETRIES: u32 = 3;
 const RETRY_DELAY: Duration = Duration::from_secs(1);
+
+static SHARED_CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
+    reqwest::Client::builder()
+        .timeout(Duration::from_secs(10))
+        .build()
+        .expect("Failed to build HTTP client")
+});
 
 /// Roblox game info
 #[derive(Debug, Clone)]
 pub struct GameInfo {
     pub name: String,
     pub creator_name: String,
-    pub universe_id: u64,
     pub place_id: u64,
 }
 
@@ -24,7 +31,6 @@ struct GamesResponse {
 struct GameData {
     name: String,
     creator: Creator,
-    id: u64,
     root_place: Option<RootPlace>,
 }
 
@@ -61,23 +67,14 @@ enum ThumbnailState {
     Unknown,
 }
 
-fn build_client() -> Result<reqwest::Client, ApiError> {
-    reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .build()
-        .map_err(ApiError::Network)
-}
-
 async fn get_json<T: serde::de::DeserializeOwned>(url: &str) -> Result<T, ApiError> {
-    let client = build_client()?;
-
     let mut last_err = None;
     for attempt in 0..MAX_RETRIES {
         if attempt > 0 {
             tokio::time::sleep(RETRY_DELAY).await;
         }
 
-        let resp = match client.get(url).send().await {
+        let resp = match SHARED_CLIENT.get(url).send().await {
             Ok(r) => r,
             Err(e) => {
                 last_err = Some(ApiError::Network(e));
@@ -125,7 +122,6 @@ pub async fn fetch_game_info(universe_id: u64) -> Result<GameInfo, ApiError> {
     Ok(GameInfo {
         name: game.name,
         creator_name: game.creator.name,
-        universe_id: game.id,
         place_id,
     })
 }
@@ -142,8 +138,8 @@ pub async fn fetch_game_thumbnail(universe_id: u64) -> Result<String, ApiError> 
     thumbnails
         .data
         .iter()
-        .find(|t| t.state == ThumbnailState::Completed && t.image_url.is_some())
-        .or_else(|| thumbnails.data.iter().find(|t| t.image_url.is_some()))
+        .find(|t| t.state == ThumbnailState::Completed && t.image_url.is_some() && !t.image_url.as_ref().unwrap().is_empty())
+        .or_else(|| thumbnails.data.iter().find(|t| t.image_url.as_ref().map_or(false, |url| !url.is_empty())))
         .and_then(|t| t.image_url.clone())
         .ok_or(ApiError::NoThumbnail)
 }

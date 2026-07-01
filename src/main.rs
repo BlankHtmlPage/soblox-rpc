@@ -1,4 +1,3 @@
-use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use clap::Parser;
@@ -21,6 +20,16 @@ struct Cli {
     client_id: u64,
 }
 
+fn validate_inputs(cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
+    if cli.universe_id == 0 {
+        return Err("universe_id must be greater than 0".into());
+    }
+    if cli.client_id == 0 {
+        return Err("client_id must be greater than 0".into());
+    }
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::fmt()
@@ -33,13 +42,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let cli = Cli::parse();
+    validate_inputs(&cli)?;
 
     info!("Fetching game info for universe {}...", cli.universe_id);
+
     let game_info = fetch_game_info(cli.universe_id).await?;
     info!("Game: {} by {}", game_info.name, game_info.creator_name);
 
-    info!("Fetching game thumbnail...");
-    let thumbnail_url = match fetch_game_thumbnail(cli.universe_id).await {
+    let thumbnail_result = fetch_game_thumbnail(cli.universe_id).await;
+
+    let thumbnail_url = match thumbnail_result {
         Ok(url) => {
             info!("Thumbnail: {}", url);
             Some(url)
@@ -54,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut drpc = discord_presence::Client::new(cli.client_id);
 
     let (tx, rx) = tokio::sync::oneshot::channel();
-    let tx = Arc::new(Mutex::new(Some(tx)));
+    let tx = std::sync::Mutex::new(Some(tx));
     let _ready_handle = drpc.on_ready(move |_ctx| {
         info!("Discord RPC connected!");
         if let Some(tx) = tx.lock().unwrap().take() {
@@ -71,24 +83,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)?
-        .as_secs();
+        .as_millis() as u64;
 
     let game_page_url = format!("https://www.roblox.com/games/{}", game_info.place_id);
-    let activity_state = format!("Playing {}", game_info.name);
-    let activity_details = format!("by {}", game_info.creator_name);
-    let large_text = game_info.name.clone();
-    let small_text = "Roblox".to_string();
-    let img_url = thumbnail_url.unwrap_or_default();
+    let img_url = thumbnail_url.filter(|url| !url.is_empty());
 
     drpc.set_activity(|act| {
-        act.details(&activity_state)
-            .state(&activity_details)
+        act.details(format!("Playing {}", game_info.name))
+            .state(format!("by {}", game_info.creator_name))
             .timestamps(|t| t.start(now))
             .assets(|a| {
-                a.large_image(&img_url)
-                    .large_text(&large_text)
+                a.large_image(img_url.as_deref().unwrap_or("roblox_logo"))
+                    .large_text(&game_info.name)
                     .small_image("roblox_logo")
-                    .small_text(&small_text)
+                    .small_text("Roblox")
             })
             .append_buttons(|b| b.label("View Game Page").url(&game_page_url))
     })

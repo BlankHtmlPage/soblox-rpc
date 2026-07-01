@@ -19,6 +19,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 discord-presence = "3.2"
 thiserror = "2"
+once_cell = "1"
 
 [profile.release]
 opt-level = 3
