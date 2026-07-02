@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-07-02
+
+### Fixed
+
+- Retry logic now fails fast on non-retryable 4xx client errors (previously burned 3s retrying 404s)
+- 429 rate-limit responses now honor the `Retry-After` header instead of using a fixed delay
+- Exponential backoff (1s → 2s → 4s) replaces fixed 1s retry delay
+- `Pending` thumbnail state now triggers a short poll loop before giving up
+- `expect()` panic risk on `get_json` replaced with safe fallback
+- SIGTERM is now handled on Unix (clean shutdown, no stale Discord presence)
+- Start timestamp captured before Discord connect for accurate elapsed timer
+- `map_or` clippy warning fixed (`is_some_and`)
+
+### Security
+
+- Added `User-Agent` header to HTTP client (prevents current/future 403 blocks from Roblox)
+- Added `cargo-audit` step to CI (catches known dependency CVEs)
+- CI now enforces `cargo clippy -D warnings`, `cargo fmt --check`, and `cargo test`
+
+### Changed
+
+- `fetch_game_info` and `fetch_game_thumbnail` now run concurrently (`tokio::join!`) — halves startup latency
+- `validate_inputs` moved to `impl Cli::validate()` method
+- Magic timeouts extracted to named constants (`HTTP_TIMEOUT`, `DISCORD_CONNECT_TIMEOUT`)
+- Thumbnail selection extracted to pure `select_thumbnail()` function
+- Replaced `once_cell` dependency with `std::sync::LazyLock` (one fewer external dependency)
+- Added 15 unit tests (thumbnail selection + retry status logic) with `wiremock` dev-dependency
+
 ## [1.0.1] - 2026-06-24
 
 ### Fixed

@@ -1,11 +1,14 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use clap::Parser;
-use tracing::info;
+use tracing::{info, warn};
 
 mod roblox;
 
 use roblox::api::{fetch_game_info, fetch_game_thumbnail};
+
+/// How long to wait for Discord IPC to connect before giving up.
+const DISCORD_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[derive(Parser)]
 #[command(name = "soblox-rpc")]
@@ -20,14 +23,17 @@ struct Cli {
     client_id: u64,
 }
 
-fn validate_inputs(cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
-    if cli.universe_id == 0 {
-        return Err("universe_id must be greater than 0".into());
+impl Cli {
+    /// Validate CLI inputs fail fast before any network activity.
+    fn validate(&self) -> Result<(), Box<dyn std::error::Error>> {
+        if self.universe_id == 0 {
+            return Err("universe_id must be greater than 0".into());
+        }
+        if self.client_id == 0 {
+            return Err("client_id must be greater than 0".into());
+        }
+        Ok(())
     }
-    if cli.client_id == 0 {
-        return Err("client_id must be greater than 0".into());
-    }
-    Ok(())
 }
 
 #[tokio::main]
@@ -42,14 +48,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     let cli = Cli::parse();
-    validate_inputs(&cli)?;
+    cli.validate()?;
 
     info!("Fetching game info for universe {}...", cli.universe_id);
 
-    let game_info = fetch_game_info(cli.universe_id).await?;
-    info!("Game: {} by {}", game_info.name, game_info.creator_name);
+    // Run both Roblox API calls concurrently — they hit independent
+    // endpoints and don't depend on each other, so this halves latency.
+    let (game_info_result, thumbnail_result) = tokio::join!(
+        fetch_game_info(cli.universe_id),
+        fetch_game_thumbnail(cli.universe_id),
+    );
 
-    let thumbnail_result = fetch_game_thumbnail(cli.universe_id).await;
+    let game_info = game_info_result?;
+    info!("Game: {} by {}", game_info.name, game_info.creator_name);
 
     let thumbnail_url = match thumbnail_result {
         Ok(url) => {
@@ -57,10 +68,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Some(url)
         }
         Err(e) => {
-            tracing::warn!("Failed to fetch thumbnail: {:?}", e);
+            warn!("Failed to fetch thumbnail: {:?}", e);
             None
         }
     };
+
+    // Capture the start timestamp *before* connecting to Discord so the
+    // "elapsed" timer reflects when the user launched the tool, not when
+    // the IPC handshake completed.
+    let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as u64;
 
     info!("Connecting to Discord...");
     let mut drpc = discord_presence::Client::new(cli.client_id);
@@ -77,15 +93,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     drpc.start();
 
-    tokio::time::timeout(Duration::from_secs(5), rx)
+    tokio::time::timeout(DISCORD_CONNECT_TIMEOUT, rx)
         .await
         .map_err(|_| -> Box<dyn std::error::Error> { "Discord connection timed out".into() })??;
 
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)?
-        .as_millis() as u64;
-
     let game_page_url = format!("https://www.roblox.com/games/{}", game_info.place_id);
+    // The API layer guarantees a non-empty URL, but guard defensively.
     let img_url = thumbnail_url.filter(|url| !url.is_empty());
 
     drpc.set_activity(|act| {
@@ -105,10 +118,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Rich Presence set! Displaying: Playing {}", game_info.name);
     info!("Press Ctrl+C to exit.");
 
-    tokio::signal::ctrl_c().await?;
+    // Wait for a termination signal. On Unix we listen for both SIGINT
+    // (Ctrl+C) and SIGTERM (sent by process managers / desktop envs) so
+    // we always get a chance to clear Discord activity cleanly instead
+    // of leaving a stale presence behind.
+    wait_for_termination_signal().await?;
 
     drpc.clear_activity().ok();
 
     info!("Done.");
+    Ok(())
+}
+
+/// Block until the process receives a termination signal.
+///
+/// On Unix this listens for both `SIGINT` and `SIGTERM`. On other
+/// platforms (Windows) only `Ctrl+C` (`SIGINT` equivalent) is handled.
+async fn wait_for_termination_signal() -> Result<(), Box<dyn std::error::Error>> {
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{SignalKind, signal};
+
+        let mut sigint = signal(SignalKind::interrupt())?;
+        let mut sigterm = signal(SignalKind::terminate())?;
+
+        tokio::select! {
+            _ = sigint.recv() => {}
+            _ = sigterm.recv() => {}
+        }
+    }
+    #[cfg(not(unix))]
+    {
+        tokio::signal::ctrl_c().await?;
+    }
+
     Ok(())
 }
