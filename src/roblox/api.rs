@@ -39,17 +39,13 @@ struct GamesResponse {
 struct GameData {
     name: String,
     creator: Creator,
-    root_place: Option<RootPlace>,
+    #[serde(rename = "rootPlaceId")]
+    root_place_id: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
 struct Creator {
     name: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct RootPlace {
-    id: u64,
 }
 
 /// Roblox API response for thumbnails
@@ -186,7 +182,7 @@ pub async fn fetch_game_info(universe_id: u64) -> Result<GameInfo, ApiError> {
         .next()
         .ok_or_else(|| ApiError::NotFound(universe_id))?;
 
-    let place_id = game.root_place.ok_or(ApiError::MissingPlaceId)?.id;
+    let place_id = game.root_place_id.ok_or(ApiError::MissingPlaceId)?;
 
     Ok(GameInfo {
         name: game.name,

@@ -171,7 +171,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .small_image("roblox_logo")
                     .small_text("Roblox")
             })
-            .append_buttons(|b| b.label("View Game Page").url(&game_page_url))
+            .append_buttons(|b| b.label("See game page").url(&game_page_url))
     })
     .map_err(|e| format!("Failed to set activity: {e}"))?;
 
