@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: soblox-rpc-linux-amd64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: soblox-rpc-windows-amd64.exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: soblox-rpc-macos-amd64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: soblox-rpc-macos-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Build (release)
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Rename binary (Windows)
+        if: runner.os == 'Windows'
+        run: cp target/${{ matrix.target }}/release/soblox-rpc.exe target/${{ matrix.target }}/release/soblox-rpc-windows-amd64.exe
+
+      - name: Rename binary (Linux)
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: cp target/${{ matrix.target }}/release/soblox-rpc target/${{ matrix.target }}/release/soblox-rpc-linux-amd64
+
+      - name: Rename binary (macOS Intel)
+        if: matrix.target == 'x86_64-apple-darwin'
+        run: cp target/${{ matrix.target }}/release/soblox-rpc target/${{ matrix.target }}/release/soblox-rpc-macos-amd64
+
+      - name: Rename binary (macOS ARM)
+        if: matrix.target == 'aarch64-apple-darwin'
+        run: cp target/${{ matrix.target }}/release/soblox-rpc target/${{ matrix.target }}/release/soblox-rpc-macos-arm64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: target/${{ matrix.target }}/release/soblox-rpc-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          path: artifacts
+
+      - name: Validate tag
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid tag format"; exit 1
+          fi
+
+      - name: Read changelog
+        id: changelog
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          # Extract section for this version (from current version header to next version header or EOF)
+          awk -v ver="$VERSION" '
+            /^## \[/ {
+              if (found) exit
+              gsub(/^## \[/, ""); gsub(/\].*$/, "")
+              if ($0 == ver) found=1
+            }
+            found { print }
+          ' CHANGELOG.md > release_notes.md
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          cat release_notes.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          body: ${{ steps.changelog.outputs.body }}
+          files: |
+            artifacts/**/*
